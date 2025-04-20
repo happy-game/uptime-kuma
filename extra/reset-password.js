@@ -3,6 +3,7 @@ console.log("== Uptime Kuma Reset Password Tool ==");
 const Database = require("../server/database");
 const { R } = require("redbean-node");
 const readline = require("readline");
+const { passwordStrength } = require("check-password-strength");
 const { initJWTSecret } = require("../server/util-server");
 const User = require("../server/model/user");
 const { io } = require("socket.io-client");
@@ -47,6 +48,10 @@ const main = async () => {
                     confirmPassword = await question("Confirm New Password: ");
                 }
 
+                if (passwordStrength(password).value === "Too weak") {
+                    console.log("Password is too weak, please try again.");
+                    continue;
+                }
                 if (password === confirmPassword) {
                     if (!("dry-run" in args)) {
                         await User.resetPassword(user.id, password);
