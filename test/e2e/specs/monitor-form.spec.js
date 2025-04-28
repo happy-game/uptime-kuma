@@ -105,4 +105,44 @@ test.describe("Monitor Form", () => {
 
         await screenshot(testInfo, page);
     });
+
+    test("default friendly name extraction from URL", async ({ page }, testInfo) => {
+        await page.goto("./add");
+        await login(page);
+        await screenshot(testInfo, page);
+        await selectMonitorType(page, "http");
+        
+        await page.getByTestId("url-input").fill("https://example.com/path");
+        
+        const friendlyNameValue = await page.getByTestId("friendly-name-input").inputValue();
+        expect(friendlyNameValue).toBe(""); // empty before save
+        
+        await screenshot(testInfo, page);
+        await page.getByTestId("save-button").click();
+        await page.waitForURL("/dashboard/*");
+        
+        const monitorName = await page.getByTestId("monitor-name").textContent();
+        expect(monitorName.trim()).toBe("example.com");
+        
+        await screenshot(testInfo, page);
+    });
+
+    test("default friendly name from invalid URL", async ({ page }, testInfo) => {
+        await page.goto("./add");
+        await login(page);
+        
+        await selectMonitorType(page, "http");
+        
+        await page.getByTestId("url-input").fill("invalid-url");
+        await page.click("body");
+        
+        await page.getByTestId("save-button").click();
+        await page.waitForURL("/dashboard/*");
+        
+        const monitorName = await page.getByTestId("monitor-name").textContent();
+        expect(monitorName.trim()).toBe("invalid-url");
+        
+        await screenshot(testInfo, page);
+    });
+
 });
